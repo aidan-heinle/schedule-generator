@@ -15,7 +15,7 @@ import scorer
 
 classes = []
 
-with open("course_inputs/Test5.txt", "r") as f:
+with open("course_inputs/Sample1.txt", "r") as f:
     for line in f:
         items = line.strip().split(";")
         classes.append(ClassSection(*items))
@@ -33,3 +33,4 @@ scored_schedules.sort(key=lambda x: x[0], reverse=True)
 
 writer.write_to_file(sorted_schedules)
 writer.write_scored_to_file(scored_schedules)
+
