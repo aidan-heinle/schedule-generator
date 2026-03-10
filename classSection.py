@@ -58,7 +58,7 @@ class ClassSection:
         start, end = time_range.split("-")
         return (ClassSection._to_minutes(start), ClassSection._to_minutes(end))
     
-    # returns boolean whether two courses have a conflict
+    
     def _is_conflicting(self, other):
 
         #overlap if max(S1, O1) <= min(S2, O2)
@@ -78,6 +78,7 @@ class ClassSection:
         # < and not <= to allow back to back
         return start_max < end_min
             
+
 
 
 
