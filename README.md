@@ -28,7 +28,7 @@ DATA STRUCTURES-001: "CSC220", 10:00-11:15, meets T,Th.
 
 ## How It Works
 
-1. Course section data is loaded from a file. --> default path "/course_inputs/<file_name>"
+1. Terminal commands: add, list, remove, generate allow for input of course section data.
 2. The program generates all combinations of sections.
 3. Conflicting schedules are removed.
 4. Remaining schedules are scored based on preference rules.
@@ -36,6 +36,5 @@ DATA STRUCTURES-001: "CSC220", 10:00-11:15, meets T,Th.
 
 ## Future Improvements
 
-* Support for hybrid and online classes.
 * Calendar style output for scheduling.
 * UI or web interface. 
