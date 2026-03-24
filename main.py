@@ -21,8 +21,8 @@ def get_yes_no(prompt):
         else:
             print("Please enter 'y' or 'n'.")
 
+    #Check that the end time is after the start time.
 def is_real_time(start_str, end_str):
-    """Check that the end time is after the start time."""
     sh, sm = map(int, start_str.split(":"))
     eh, em = map(int, end_str.split(":"))
     start_minutes = sh * 60 + sm
