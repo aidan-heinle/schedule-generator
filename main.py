@@ -11,7 +11,6 @@ import writer
 import scorer
 import re
 
-
 def get_yes_no(prompt):
     while True:
         answer = input(prompt + " (y/n): ").strip().lower()
@@ -22,6 +21,14 @@ def get_yes_no(prompt):
         else:
             print("Please enter 'y' or 'n'.")
 
+def is_real_time(start_str, end_str):
+    """Check that the end time is after the start time."""
+    sh, sm = map(int, start_str.split(":"))
+    eh, em = map(int, end_str.split(":"))
+    start_minutes = sh * 60 + sm
+    end_minutes = eh * 60 + em
+    return end_minutes > start_minutes
+
 def get_time(prompt):
     while True:
         time_input = input(prompt + " (HH:MM-HH:MM, 24-hour format): ").strip()
@@ -30,8 +37,12 @@ def get_time(prompt):
             try:
                 sh, sm = map(int, start.split(":"))
                 eh, em = map(int, end.split(":"))
-                if 0 <= sh < 24 and 0 <= eh < 24 and 0 <= sm < 60 and 0 <= em < 60:
-                    return time_input
+                if not (0 <= sh < 24 and 0 <= eh < 24 and 0 <= sm < 60 and 0 <= em < 60):
+                    raise ValueError
+                if not is_real_time(start, end):
+                    print("End time must be after start time. Please try again.")
+                    continue
+                return time_input
             except ValueError:
                 pass
         print("Invalid time. Please try again in HH:MM-HH:MM format.")
@@ -141,7 +152,7 @@ def main():
                     print("  " + str(course))
                 print("")
 
-            # Always write to files
+            
             writer.write_scored_to_file(scored_schedules)
             print("All schedules written to output files.\n")
 
