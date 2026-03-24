@@ -39,6 +39,10 @@ class ClassSection:
         return self._meeting_days
     
     def __repr__(self):
+
+        if self.is_online():
+            return f"{self._code}-{self._section_number}: \"{self._name}\", Online."
+        
         return f"{self._code}-{self._section_number}: \"{self._name}\", {self._time}, meets {self._meeting_days}."
     
     def __eq__(self, other):
