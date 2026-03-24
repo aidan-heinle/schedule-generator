@@ -7,16 +7,18 @@ class ClassSection:
     """
     
     
-    def __init__(self, code, section_number, name, time, days, online=False):
+    def __init__(self, code, section_number, name, time="", days="", online=False):
         self._name = name # course name
         self._section_number = section_number # unique identifier per code, "001"
         self._code = code # course code, "IT300"
         self._time = time # time of class in 24hr, "14:00-15:15"
         self._meeting_days = days # comma seperated days, "M,W"
-        self._online = online # is online. Assume all async for now
+        self._online = online # is online. Assumes all online classes are asynch.
 
-        self._time_tokenized = ClassSection.tokenize(time)
-  
+        if self._online or not time:
+            self._time_tokenized = (0, 0)
+        else:
+            self._time_tokenized = ClassSection.tokenize(time)
 
     def get_name(self):
         return self._name
@@ -60,6 +62,9 @@ class ClassSection:
     
     
     def _is_conflicting(self, other):
+
+        if self.is_online() or other.is_online():
+            return False
 
         #overlap if max(S1, O1) <= min(S2, O2)
 

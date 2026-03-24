@@ -41,6 +41,8 @@ def score_schedule(schedule):
 
 def has_no_friday(schedule):
     for section in schedule:
+        if section.is_online():
+            continue
         if "F" in section.get_meeting_days():
             return False
     return True
@@ -50,6 +52,9 @@ def find_gap_penalty(schedule):
     days = {"M": [], "T": [], "W": [], "Th": [], "F": []}
 
     for section in schedule:
+        if section.is_online():
+            continue
+
         for d in section.get_meeting_days().split(","):
             days[d].append(section)
 
@@ -70,12 +75,16 @@ def find_gap_penalty(schedule):
 
 def has_early_morning(schedule):
     for section in schedule:
+        if section.is_online():
+            continue
         if section._time_tokenized[0] < 570:
             return True
     return False
 
 def has_late_classes(schedule):
     for section in schedule:
+        if section.is_online():
+            continue
         if section._time_tokenized[1] > 930:
             return True
     return False
@@ -84,6 +93,8 @@ def has_short_days(schedule):
     days = {"M": [], "T": [], "W": [], "Th": [], "F": []}
 
     for section in schedule:
+        if section.is_online():
+            continue
         for d in section.get_meeting_days().split(","):
             days[d].append(section)
 
@@ -105,6 +116,8 @@ def compact_day_bonus(schedule):
     used_days = set()
 
     for section in schedule:
+        if section.is_online():
+            continue
         for d in section.get_meeting_days().split(","):
             used_days.add(d)
 

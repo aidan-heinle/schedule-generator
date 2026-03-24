@@ -57,6 +57,9 @@ def sort_schedules(schedules):
     day_order = {"M": 0, "T": 1, "W": 2, "Th": 3, "F": 4}
 
     def section_key(section):
+        if section.is_online():
+            return (999, 9999)  # push online classes to end
+
         days = section.get_meeting_days().split(",")
         earliest_day = min(day_order[d] for d in days)
         start_time = section._time_tokenized[0]
