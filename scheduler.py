@@ -58,8 +58,8 @@ def sort_schedules(schedules):
 
     def section_key(section):
         if section.is_online():
-            return (999, 9999)  # push online classes to end
-
+            # Keep asynchronous classes after scheduled meetings when displaying.
+            return (99, 0)
         days = section.get_meeting_days().split(",")
         earliest_day = min(day_order[d] for d in days)
         start_time = section._time_tokenized[0]
