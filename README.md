@@ -17,4 +17,5 @@ A Python program that generates all possible non-conflicting class schedules fro
 ## To Run
 * Install Dependencies:
    * pip install Flask
-* cd /schedule-generator python app.py
+* cd into /schedule-generator
+* run python app.py
