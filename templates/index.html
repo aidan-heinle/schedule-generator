@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Class Scheduler</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
+    fieldset, .course, .section, .schedule { margin: 1rem 0; padding: 1rem; border: 1px solid #bbb; border-radius: 5px; }
+    .course { border-color: #777; }
+    .section { display: grid; grid-template-columns: repeat(4, minmax(120px, 1fr)); gap: .75rem; align-items: end; }
+    label { display: grid; gap: .25rem; } .days { display: flex; flex-wrap: wrap; gap: .5rem; }
+    .days label { display: block; } button { padding: .55rem .8rem; cursor: pointer; }
+    .remove { align-self: end; } .error { color: #a00; } .score { font-weight: 700; }
+  </style>
+</head>
+<body>
+  <h1>Class Scheduler</h1>
+  <p>Add each course once, then add every available section beneath it. The scheduler selects one section per course.</p>
+  <form id="scheduler-form">
+    <fieldset><legend>Scoring preferences</legend>
+      <label>No-Friday bonus <input type="number" name="no_friday_bonus" value="{{ defaults.no_friday_bonus }}"></label>
+      <label>No-morning bonus <input type="number" name="no_morning_bonus" value="{{ defaults.no_morning_bonus }}"></label>
+      <label>No-late-class bonus <input type="number" name="no_late_bonus" value="{{ defaults.no_late_bonus }}"></label>
+      <label>Online-section bonus <input type="number" name="online_class_bonus" value="{{ defaults.online_class_bonus }}"></label>
+      <label>Morning starts before <input type="time" name="morning_cutoff" value="{{ defaults.morning_cutoff }}"></label>
+      <label>Late class ends after <input type="time" name="late_cutoff" value="{{ defaults.late_cutoff }}"></label>
+      <label>Gap penalty strength <input type="number" min="0" name="gap_penalty_multiplier" value="{{ defaults.gap_penalty_multiplier }}"></label>
+    </fieldset>
+    <h2>Courses and sections</h2>
+    <div id="courses"></div>
+    <button type="button" id="add-course">Add course</button>
+    <button type="submit">Generate schedules</button>
+  </form>
+  <p id="message" class="error" role="alert"></p><div id="results"></div>
+  <datalist id="time-options"></datalist>
+  <template id="course-template"><div class="course">
+    <h3>Course</h3>
+    <label>Course code <input class="code" placeholder="CSC150" required></label>
+    <label>Course name <input class="name" placeholder="Intro Programming"></label>
+    <button class="remove-course" type="button">Remove course</button>
+    <div class="course-sections"></div>
+    <button class="add-section" type="button">Add section</button>
+  </div></template>
+  <template id="section-template"><div class="section">
+    <label>Section <input class="number" value="001" required></label>
+    <label><input class="online" type="checkbox"> Online / asynchronous</label>
+    <div class="meeting"><span>Days</span><div class="days">
+      <label><input type="checkbox" value="M"> Mon</label><label><input type="checkbox" value="T"> Tue</label><label><input type="checkbox" value="W"> Wed</label><label><input type="checkbox" value="Th"> Thu</label><label><input type="checkbox" value="F"> Fri</label>
+    </div></div>
+    <label class="meeting">Start <input class="start" type="time" list="time-options"></label><label class="meeting">End <input class="end" type="time" list="time-options"></label>
+    <button class="remove" type="button">Remove</button>
+  </div></template>
+  <script>
+    const courses = document.querySelector('#courses');
+    const courseTemplate = document.querySelector('#course-template'), sectionTemplate = document.querySelector('#section-template');
+    const timeOptions = document.querySelector('#time-options');
+    for (let minutes = 6 * 60; minutes <= 22 * 60; minutes += 15) {
+      const value = `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
+      timeOptions.insertAdjacentHTML('beforeend', `<option value="${value}">`);
+    }
+    function addSection(course) {
+      const node = sectionTemplate.content.cloneNode(true); const section = node.querySelector('.section');
+      node.querySelector('.remove').onclick = () => section.remove();
+      node.querySelector('.online').onchange = event => section.querySelectorAll('.meeting').forEach(el => {
+        el.hidden = event.target.checked; el.querySelectorAll('input').forEach(input => input.required = !event.target.checked && (input.type === 'time'));
+      }); course.querySelector('.course-sections').append(node);
+    }
+    function addCourse() {
+      const node = courseTemplate.content.cloneNode(true); const course = node.querySelector('.course');
+      node.querySelector('.remove-course').onclick = () => course.remove();
+      node.querySelector('.add-section').onclick = () => addSection(course);
+      courses.append(node); addSection(course);
+    }
+    document.querySelector('#add-course').onclick = addCourse; addCourse();
+    document.querySelector('#scheduler-form').onsubmit = async event => {
+      event.preventDefault(); const message = document.querySelector('#message'), results = document.querySelector('#results'); message.textContent = ''; results.innerHTML = '';
+      const preferences = Object.fromEntries(new FormData(event.currentTarget));
+      const data = { preferences, sections: [...courses.querySelectorAll('.course')].flatMap(course =>
+        [...course.querySelectorAll('.section')].map(el => ({
+          code: course.querySelector('.code').value, name: course.querySelector('.name').value, section_number: el.querySelector('.number').value,
+          online: el.querySelector('.online').checked, days: [...el.querySelectorAll('.days input:checked')].map(input => input.value), start: el.querySelector('.start').value, end: el.querySelector('.end').value
+        }))) };
+      const response = await fetch('/api/schedules', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)});
+      const payload = await response.json(); if (!response.ok) { message.textContent = payload.error; return; }
+      results.innerHTML = `<h2>${payload.count} schedule${payload.count === 1 ? '' : 's'} found</h2>` + payload.schedules.map((schedule, i) => `<div class="schedule"><span class="score">#${i+1} — Score: ${schedule.score}</span><ul>${schedule.sections.map(s => `<li>${s.code}-${s.section}: ${s.name} — ${s.online ? 'Online / asynchronous' : `${s.days}, ${s.time}`}</li>`).join('')}</ul></div>`).join('');
+    };
+  </script>
+</body></html>
