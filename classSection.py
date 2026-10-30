@@ -1,24 +1,22 @@
-class ClassSection:
-    """
-    classSection.py
-    
-    class for course section creation.
+"""
+classSection.py
+class for course section creation.
 
-    """
+"""
+class ClassSection:
     
-    
-    def __init__(self, code, section_number, name, time="", days="", online=False):
+    def __init__(self, code, section_number, name, time, days, online=False):
         self._name = name # course name
         self._section_number = section_number # unique identifier per code, "001"
         self._code = code # course code, "IT300"
         self._time = time # time of class in 24hr, "14:00-15:15"
         self._meeting_days = days # comma seperated days, "M,W"
-        self._online = online # is online. Assumes all online classes are asynch.
+        # Online sections are treated as asynchronous.  Accept booleans as well
+        # as the strings used by the legacy text-file importer.
+        self._online = str(online).lower() == "true"
 
-        if self._online or not time:
-            self._time_tokenized = (0, 0)
-        else:
-            self._time_tokenized = ClassSection.tokenize(time)
+        self._time_tokenized = ClassSection.tokenize(time)
+  
 
     def get_name(self):
         return self._name
@@ -39,10 +37,6 @@ class ClassSection:
         return self._meeting_days
     
     def __repr__(self):
-
-        if self.is_online():
-            return f"{self._code}-{self._section_number}: \"{self._name}\", Online."
-        
         return f"{self._code}-{self._section_number}: \"{self._name}\", {self._time}, meets {self._meeting_days}."
     
     def __eq__(self, other):
@@ -64,10 +58,11 @@ class ClassSection:
         start, end = time_range.split("-")
         return (ClassSection._to_minutes(start), ClassSection._to_minutes(end))
     
-    
+    # returns boolean whether two courses have a conflict
     def _is_conflicting(self, other):
 
-        if self.is_online() or other.is_online():
+        # Asynchronous online classes do not occupy a meeting slot.
+        if self._online or other._online:
             return False
 
         #overlap if max(S1, O1) <= min(S2, O2)
@@ -87,7 +82,6 @@ class ClassSection:
         # < and not <= to allow back to back
         return start_max < end_min
             
-
 
 
 
